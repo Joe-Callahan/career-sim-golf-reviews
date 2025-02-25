@@ -1,13 +1,10 @@
 const client = require('./db/client.js');
 client.connect();
-const { authentication, verifyToken, createUser } = require('./db/users.js');
+const { createUser, authentication, verifyToken } = require('./db/users.js');
+const { createReview, deleteReview } = require('./db/reviews.js');
 const express = require('express');
 const app = express();
 app.use(express.json());
-
-console.log(process.env.PORT);
-
-
 
 app.get('/', (req, res) => {
   res.send(`Welcome to the golf course review page!`)
@@ -63,6 +60,58 @@ app.get('/api/courses/:id', async(req, res) => {
   res.send(selectedCourse.rows[0]);
 });
 
+app.get('/api/courses/:id/reviews', async(req, res) => {
+  const courseId = req.params.id;
+  const selectedCourseReviews = await client.query(`SELECT * FROM reviews WHERE course_id=${courseId};`);
+  res.send(selectedCourseReviews.rows);
+});
+
+app.post('/api/courses/:id/reviews', async(req, res) => {
+  const user = await verifyToken(req.headers.authorization);
+  if(user) {
+    const courseId = req.params.id;
+    const userId = user.id;
+    const { title, description, rating } = req.body;
+    try {
+      await createReview(title, description, rating, courseId, userId);
+      res.send(`Thank you, ${user.username}. Your review has been recorded.`);
+    } catch(err) {
+      res.send({message: err.message});
+    }
+  } else {
+    res.send(`You must be logged in to write a review.`);
+  }
+});
+
+app.get('/api/reviews/me', async(req, res) => {
+  const user = await verifyToken(req.headers.authorization);
+  if(user) {
+    try {
+      const userReviews = await client.query(`
+        SELECT * FROM reviews WHERE user_id=${user.id};
+      `);
+      res.send(userReviews.rows);
+    } catch(err) {
+      res.send(err.message);
+    }
+  } else {
+    res.send(`Please log in or register to use this feature.`);
+  }
+});
+
+app.delete('/api/reviews/:reviewId', async(req,res) => {
+  const user = await verifyToken(req.headers.authorization);
+  const reviewId = req.params;
+  const reviewInQuestion = await client.query(`
+    SELECT * FROM reviews WHERE id=${reviewId};
+  `);
+  if(user && (user.id === reviewInQuestion.user_id)) {
+    await deleteReview(reviewId);
+    res.send(`Deletion successful.`);
+  } else {
+    res.send(`Thou doth not delete which thou doth not write.`);
+  }
+});
 
 app.listen(process.env.PORT, () => {
   console.log(`listening on PORT ${process.env.PORT}`);
