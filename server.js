@@ -54,8 +54,15 @@ app.get('/api/auth/me', async(req, res) => {
 
 app.get('/api/courses', async(req, res) => {
   const courses = await client.query(`SELECT * FROM courses;`);
-  res.send(courses);
-})
+  res.send(courses.rows);
+});
+
+app.get('/api/courses/:id', async(req, res) => {
+  const courseId = req.params.id;
+  const selectedCourse = await client.query(`SELECT * FROM courses WHERE id=${courseId};`);
+  res.send(selectedCourse.rows[0]);
+});
+
 
 app.listen(process.env.PORT, () => {
   console.log(`listening on PORT ${process.env.PORT}`);

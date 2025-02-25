@@ -1,11 +1,12 @@
 const client = require('./client.js');
 const { createUser } = require('./users.js');
-const { createCourse } = require('./courses.js');
+const createCourse = require('./courses.js');
 
 const dropTables = async() => {
   try {
     await client.query(`
       DROP TABLE IF EXISTS users;
+      DROP TABLE IF EXISTS courses;
     `);
   } catch(err) {
     console.log(err);
