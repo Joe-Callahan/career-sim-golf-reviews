@@ -2,12 +2,12 @@ const client = require('./client.js');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const createUser = async(createdUsername, createdPassword) => {
+const createUser = async(createdUsername, createdPassword, createdHandicap) => {
   try {
     const encryptedPassword = await bcrypt.hash(createdPassword, 8);
     await client.query(`
-      INSERT INTO users (username, password)
-      VALUES ('${createdUsername}', '${encryptedPassword}');
+      INSERT INTO users (username, password, handicap)
+      VALUES ('${createdUsername}', '${encryptedPassword}', ${createdHandicap});
       `);
   } catch(err) {
     console.log(err);
@@ -36,7 +36,7 @@ const authentication = async(username, password) => {
   }
 }
 
-const tokenLogIn = async(token) => {
+const verifyToken = async(token) => {
   try {
     const tokenVerification = await jwt.verify(token, process.env.JWT_SECRET);
     const { rows } = await client.query(`
@@ -44,7 +44,7 @@ const tokenLogIn = async(token) => {
     `);
     const user = rows[0];
     if(user) {
-      return {username:user.username};
+      return {username:user.username, handicap:user.handicap};
     } else {
       throw new Error('Token issues. Please try again.');
     }
@@ -53,4 +53,4 @@ const tokenLogIn = async(token) => {
   }
 }
 
-module.exports = { createUser, authentication, tokenLogIn }
+module.exports = { createUser, authentication, verifyToken }
