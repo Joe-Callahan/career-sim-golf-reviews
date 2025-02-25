@@ -44,7 +44,7 @@ const verifyToken = async(token) => {
     `);
     const user = rows[0];
     if(user) {
-      return {username:user.username, handicap:user.handicap};
+      return {username:user.username, handicap:user.handicap, id:user.id};
     } else {
       throw new Error('Token issues. Please try again.');
     }
