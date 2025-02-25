@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send(`Welcome to the golf course review page!`)
+  res.send(`Welcome to the golf course review page!`);
 });
 
 app.post('/api/auth/register', async(req, res) => {
@@ -100,14 +100,18 @@ app.get('/api/reviews/me', async(req, res) => {
 });
 
 app.delete('/api/reviews/:reviewId', async(req,res) => {
+  const reviewId = req.params.reviewId;
   const user = await verifyToken(req.headers.authorization);
-  const reviewId = req.params;
   const reviewInQuestion = await client.query(`
-    SELECT * FROM reviews WHERE id=${reviewId};
+    SELECT * FROM reviews WHERE id=${reviewId}
   `);
   if(user && (user.id === reviewInQuestion.user_id)) {
-    await deleteReview(reviewId);
-    res.send(`Deletion successful.`);
+    try {
+      await deleteReview(reviewId);
+      res.send(`Deletion successful.`);
+    } catch(err) {
+      res.send(err.message);
+    }
   } else {
     res.send(`Thou doth not delete which thou doth not write.`);
   }

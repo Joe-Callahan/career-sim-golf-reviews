@@ -1,7 +1,7 @@
 const client = require('./client.js');
 const { createUser } = require('./users.js');
 const createCourse = require('./courses.js');
-const createReview = require('./reviews.js');
+const { createReview } = require('./reviews.js');
 
 const dropTables = async() => {
   try {
